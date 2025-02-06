@@ -1,0 +1,4 @@
+name = "Dithering"
+uuid = "0974bddb-ffe7-4d59-96d4-d2a78da66510"
+authors = ["Darryl Gamroth <dgamroth@rubus.ca>"]
+version = "0.1.0"
