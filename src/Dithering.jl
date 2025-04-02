@@ -18,10 +18,29 @@ mutable struct Dither{T<:Number,A<:AbstractVector{T}}
         if length(target) == length(current) == length(output) == length(error) != num_actuators
             throw(ArgumentError("array lengths must be equal"))
         end
-        new(target, current, output, error, num_actuators, lsb, 1/lsb, lo, hi, step)
+        new(target, current, output, error, num_actuators, lsb, 1 / lsb, lo, hi, step)
     end
 end
 
+"""
+    Dither(::Type{T}, num_actuators, bits::Int, lo, hi, step) where {T<:Number}
+
+Constructs a `Dither` object with the specified parameters.
+
+# Arguments
+- `::Type{T}`: The numeric type of the dither values (e.g., `Float64`, `Int`).
+- `num_actuators::Int`: The number of actuators to be used.
+- `bits::Int`: The number of bits used for quantization.
+- `lo`: The lower bound of the dither range.
+- `hi`: The upper bound of the dither range.
+- `step`: The step size for the dither values.
+
+# Returns
+A `Dither{T, Vector{T}}` object initialized with zeroed vectors and the specified parameters.
+
+# Notes
+The quantization step size is calculated as `2 / (2^bits - 1)`.
+"""
 function Dither(::Type{T}, num_actuators, bits::Int, lo, hi, step) where {T<:Number}
     return Dither{T,Vector{T}}(zeros(T, num_actuators),
         zeros(T, num_actuators),
@@ -30,7 +49,12 @@ function Dither(::Type{T}, num_actuators, bits::Int, lo, hi, step) where {T<:Num
         num_actuators, 2 / (2^bits - 1), lo, hi, step)
 end
 
-target!(d::Dither, value) = copy!(d.target, value)
+"""
+    target!(d::Dither, value)
+
+Sets the target value array
+"""
+target!(d::Dither{T}, value::AbstractVector{T}) where {T} = copyto!(d.target, value)
 target(d::Dither) = d.target
 current(d::Dither) = d.current
 output(d::Dither) = d.output
@@ -41,14 +65,24 @@ hi(d::Dither) = d.hi
 step_size!(d::Dither, value) = d.step_size = value
 step_size(d::Dither) = d.step_size
 
-function reset!(d::Dither{T,A}) where {T<:Number,A<:AbstractVector{T}}
+"""
+    reset!(d::Dither)
+
+    Reset the state
+"""
+function reset!(d::Dither{T}) where {T}
     fill!(d.target, zero(T))
     fill!(d.current, zero(T))
     fill!(d.output, zero(T))
     fill!(d.error, zero(T))
 end
 
-function step!(d::Dither{T,A}) where {T<:Number,A<:AbstractVector{T}}
+"""
+    step!(d::Dither)
+
+    Perform a single step of the dithering process.
+"""
+function step!(d::Dither{T}) where {T}
     lo = d.lo
     hi = d.hi
     lsb = d.lsb
