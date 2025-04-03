@@ -3,10 +3,10 @@ module Dithering
 export Dither, target!, target, current, output, lo!, lo, hi!, hi, step_size!, step_size, reset!, step!
 
 mutable struct Dither{T<:Number,A<:AbstractVector{T}}
-    target::A
-    current::A
-    output::A
-    error::A
+    const target::A
+    const current::A
+    const output::A
+    const error::A
     const num_actuators::Int64
     const lsb::T
     const invlsb::T
@@ -33,7 +33,7 @@ Constructs a `Dither` object with the specified parameters.
 - `bits::Int`: The number of bits used for quantization.
 - `lo`: The lower bound of the dither range.
 - `hi`: The upper bound of the dither range.
-- `step`: The step size for the dither values.
+- `step`: The step size to be used for ramping to the target value.
 
 # Returns
 A `Dither{T, Vector{T}}` object initialized with zeroed vectors and the specified parameters.
@@ -121,38 +121,3 @@ function step!(d::Dither{T}) where {T}
 end
 
 end # module Dithering
-
-# # This version is slower due to the use of mod()
-# function update_mod!(d::Dither{T,A}) where {T<:Number,A<:AbstractVector{T}}
-#     lo = d.lo
-#     hi = d.hi
-#     lsb = d.lsb
-#     step_max = d.step
-
-#     @inbounds for i in 1:d.length
-#         x = d.target[i]
-#         u = d.current[i]
-#         e = d.error[i]
-
-#         # Ramp to target value
-#         delta = x - u
-#         u += clamp(delta, -step_max, step_max)
-
-#         dither = (rand(T) - 0.5) * lsb
-
-#         # Noise shaping filter with dither injection
-#         # y[i] = u[i] - e[i] + d
-#         y = u - e + dither
-
-#         # Calculate quantization error
-#         e = -mod(y, lsb)
-
-#         # Calculate quantized output
-#         v = y + e
-
-#         d.current[i] = u
-#         d.error[i] = e
-#         d.output[i] = clamp(v, lo, hi)
-#     end
-#     return d.output
-# end
