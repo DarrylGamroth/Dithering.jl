@@ -109,12 +109,9 @@ function step!(d::Dither{T}) where {T}
         # Quantize y
         v = round(y * invlsb) * lsb
 
-        # Calculate quantization error
-        e = v - y
-
         # Store state
         d.current[i] = u
-        d.error[i] = e
+        d.error[i] = v - y
         d.output[i] = clamp(v, lo, hi)
     end
     return d.output
